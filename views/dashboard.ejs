@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+        <%= title %>
+    </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="p-4 sm:p-10 min-h-screen">
+    <header class="header-bg p-6 rounded-lg shadow-lg text-white mb-8 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-extrabold mb-1">
+                <%= guildName %> 대시보드
+            </h1>
+            <p class="text-sm opacity-90">서버 ID: <%= guildId %>
+            </p>
+        </div>
+        <a href="/dashboard/settings?guildId=<%= guildId %>"
+            class="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded transition-colors">⚙️ 봇 설정</a>
+    </header>
+
+    <% if (error) { %>
+        <div class="bg-red-100 dark:bg-red-900 text-error p-4 rounded-lg mb-6 font-semibold">
+            <%= error %>
+        </div>
+        <% } %>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card p-4 rounded-lg shadow-lg text-center border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">오늘 인증 완료</p>
+                    <p class="text-3xl font-bold text-blue-500">
+                        <%= stats.todayVerifiedCount %>건
+                    </p>
+                </div>
+                <div class="card p-4 rounded-lg shadow-lg text-center border-l-4 border-yellow-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">총 이메일 기록</p>
+                    <p class="text-3xl font-bold">
+                        <%= stats.totalEmails %>개
+                    </p>
+                </div>
+                <div class="card p-4 rounded-lg shadow-lg text-center border-l-4 border-green-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">총 기기 지문 기록</p>
+                    <p class="text-3xl font-bold">
+                        <%= stats.totalFingerprints %>개
+                    </p>
+                </div>
+            </div>
+
+            <div class="card p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">지난 30일간 인증 통계</h2>
+                <div class="relative h-80"><canvas id="timeSeriesChart"></canvas></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">인증 판정 결과 분포</h2>
+                    <div class="relative h-72"><canvas id="verificationChart"></canvas></div>
+                </div>
+                <div class="card p-6 rounded-lg shadow-lg">
+                    <h2 class="text-xl font-bold mb-4 border-b pb-2 dark:border-gray-700">계정 연령 분포</h2>
+                    <div class="relative h-72"><canvas id="ageDistributionChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="card p-6 rounded-lg shadow-lg">
+                <div class="flex flex-wrap justify-between items-center mb-4 border-b pb-2 dark:border-gray-700">
+                    <h2 class="text-xl font-bold">🔒 인증된 사용자 목록 (<%= verifiedUsers.length %>개)</h2>
+                    <input type="text" id="userSearch" onkeyup="searchUsers()" placeholder="사용자 ID 또는 이메일로 검색..."
+                        class="search-bar p-2 border rounded w-full sm:w-auto mt-2 sm:mt-0">
+                </div>
+                <div class="overflow-x-auto max-h-96">
+                    <table id="userTable" class="min-w-full text-sm">
+                        <thead>
+                            <tr>
+                                <th class="table-header p-2 text-left">복호화된 이메일</th>
+                                <th class="table-header p-2 text-left">Discord ID</th>
+                                <th class="table-header p-2 text-left">관리</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% verifiedUsers.forEach((user, index)=> { %>
+                                <tr class="<%= index % 2 === 0 ? 'table-row-even' : 'table-row-odd' %> border-t border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800/50 cursor-pointer"
+                                    onclick="showUserDetails('<%= user.discordId %>', '<%= guildId %>')">
+                                    <td class="p-2 break-all">
+                                        <%= user.decryptedEmail.startsWith('DECRYPTION_ERROR') ? `<span
+                                            class="text-error">복호화 오류</span>` : user.decryptedEmail %>
+                                    </td>
+                                    <td class="p-2 text-xs font-mono">
+                                        <%= user.discordId %>
+                                    </td>
+                                    <td class="p-2"><button
+                                            onclick="event.stopPropagation(); deleteUser('<%= user.discordId %>', '<%= guildId %>')"
+                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs">파기</button>
+                                    </td>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <footer class="mt-10 pt-4 border-t text-sm text-center text-gray-500 dark:text-light">
+                <a href="/dashboard/select" class="text-blue-500 dark:text-blue-400 hover:underline">다른 서버 선택</a> |
+                <a href="/dashboard/login" class="text-blue-500 dark:text-blue-400 hover:underline">세션 다시 로그인</a> |
+                <a href="/" class="text-blue-500 dark:text-blue-400 hover:underline">시스템 홈</a>
+            </footer>
+
+            <div id="userDetailsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                style="display: none;">
+                <div class="modal-content w-full max-w-2xl p-6 rounded-lg shadow-lg overflow-y-auto"
+                    onclick="event.stopPropagation();">
+                    <div id="modal-loader" class="text-center py-10">불러오는 중...</div>
+                    <div id="modal-data" style="display: none;">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex items-center">
+                                <img id="modal-avatar" src="" alt="avatar" class="w-16 h-16 rounded-full mr-4">
+                                <div>
+                                    <h2 id="modal-username" class="text-2xl font-bold"></h2>
+                                    <p id="modal-userid" class="text-sm text-gray-400 font-mono"></p>
+                                </div>
+                            </div>
+                            <button onclick="closeModal()" class="text-2xl font-bold">&times;</button>
+                        </div>
+                        <div class="card p-4 rounded-md space-y-1 text-sm">
+                            <div><strong>계정 생성일:</strong> <span id="modal-createdat"></span></div>
+                            <div>
+                                <strong>인증된 이메일:</strong>
+                                <span id="modal-email" class="font-mono"></span>
+                                <span id="modal-email-warning" class="ml-1"></span>
+                            </div>
+                            <div><strong>핑거프린트 ID:</strong> <span id="modal-fingerprint"
+                                    class="font-mono break-all text-xs"></span></div>
+                        </div>
+                        <div id="related-accounts-section" class="mt-4" style="display:none;">
+                            <h3 class="text-lg font-semibold mt-4 border-t pt-4 dark:border-gray-700">🚨 연관 계정 기록</h3>
+                            <p class="text-xs text-yellow-500 mb-2">현재 사용자와 동일한 핑거프린트로 인증한 다른 계정들입니다.</p>
+                            <div id="modal-related-accounts" class="text-sm space-y-1"></div>
+                        </div>
+                        <h3 class="text-lg font-semibold mt-4 border-t pt-4 dark:border-gray-700">인증 로그</h3>
+                        <div id="modal-logs" class="text-xs space-y-2 mt-2 max-h-40 overflow-y-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                const statsData = JSON.parse(`<%- JSON.stringify(stats || {}) %>`);
+            </script>
+            <script src="/js/dashboard.js"></script>
+</body>
+
+</html>
