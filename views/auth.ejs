@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord 인증 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        'discord-blue': '#5865F2', 'indigo-600': '#4f46e5',
+                        'light-bg': '#f7fafc', 'light-card': '#ffffff', 'light-text': '#1f2937', 'light-text-sub': '#6b7280',
+                        'success-bg': '#F0FFF4', 'success-text': '#22543D', 'success-border': '#10B981',
+                        'error-bg': '#FEE2E2', 'error-text': '#991B1B', 'error-border': '#ED4245',
+                        'dark-bg': '#1e1f22', 'dark-card': '#2b2d31', 'dark-text': '#e5e7eb', 'dark-text-sub': '#9ca3af',
+                        'dark-success-bg': '#065F46', 'dark-success-text': '#A7F3D0',
+                        'dark-error-bg': '#450A0A', 'dark-error-text': '#FCA5A5'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth-page flex items-center justify-center min-h-screen bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text">
+    <div id="auth-container" class="relative p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-sm sm:max-w-md text-center transform transition duration-500 hover:scale-[1.01] bg-light-card dark:bg-dark-card">
+        <div id="loading-overlay" class="hidden absolute inset-0 bg-light-card dark:bg-dark-card bg-opacity-95 flex flex-col items-center justify-center rounded-xl z-10 transition-opacity duration-300 px-8">
+            <svg class="animate-spin h-10 w-10 text-discord-blue mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <h2 class="text-2xl font-bold">처리 중...</h2>
+            <p class="mt-2 text-light-text-sub dark:text-dark-text-sub">잠시만 기다려주세요.</p>
+        </div>
+
+        <div id="main-content" class="transition-opacity duration-300">
+            <h1 class="text-3xl font-extrabold mb-2 text-discord-blue">🔒 인증 센터</h1>
+            <p class="text-light-text-sub dark:text-dark-text-sub mb-6">다중 계정 방지 시스템</p>
+
+            <div id="alert-box" class="hidden p-4 mb-4 text-sm rounded-lg flex items-center" role="alert">
+                <span id="alert-icon" class="inline-flex items-center justify-center w-5 h-5 me-2"></span>
+                <span id="alert-message" class="font-medium flex-grow text-left"></span>
+            </div>
+
+            <% if (stage==='error') { %>
+                <div class="p-6 rounded-xl border bg-error-bg dark:bg-dark-error-bg border-error-border text-error-text dark:text-dark-error-text">
+                    <h2 class="text-2xl font-bold mb-2">인증 실패</h2>
+                    <p class="font-medium break-words"><%= error %></p>
+                </div>
+            <% } %>
+            <% if (stage==='success') { %>
+                <div class="p-6 rounded-xl border bg-success-bg dark:bg-dark-success-bg border-success-border text-success-text dark:text-dark-success-text">
+                    <h2 class="text-2xl font-bold mb-2">인증 완료!</h2>
+                    <p class="font-medium"><%= message %></p>
+                </div>
+            <% } %>
+            <% if (stage==='email_fingerprint') { %>
+                <h2 class="text-xl font-bold">이메일 인증 및 기기 확인</h2>
+                <form id="request-code-form" action="/request-code" method="POST" class="space-y-4 mt-4">
+                    <input type="hidden" name="token" value="<%= token %>">
+                    <input type="hidden" name="fingerprintId" id="fingerprint-id" required>
+                    <div class="text-left">
+                        <label for="email" class="block text-sm font-medium mb-1">네이버 이메일 주소 (@naver.com)</label>
+                        <input type="email" id="email" name="email" required placeholder="example@naver.com" class="w-full p-3 border rounded-lg bg-light-card dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-discord-blue focus:border-discord-blue">
+                    </div>
+                    <button type="submit" id="submit-button" disabled class="w-full bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition cursor-not-allowed">기기 확인 중...</button>
+                </form>
+            <% } %>
+            <% if (stage==='code_submit') { %>
+                <h2 class="text-xl font-bold">인증 코드 입력</h2>
+                <p class="text-light-text-sub dark:text-dark-text-sub mb-4"><%= email %> 메일함에서 6자리 코드를 확인해주세요.</p>
+                <form id="verify-form" action="/verify" method="POST" class="space-y-4">
+                    <input type="hidden" name="token" value="<%= token %>">
+                    <div class="text-left">
+                        <label for="code" class="block text-sm font-medium mb-1">인증 코드 (6자리)</label>
+                        <input type="text" id="code" name="code" required maxlength="6" pattern="\d{6}" placeholder="123456" class="w-full p-3 text-center border rounded-lg bg-light-card dark:bg-gray-700 border-gray-300 dark:border-gray-600 tracking-wider text-lg focus:ring-discord-blue focus:border-discord-blue">
+                    </div>
+                    <button type="submit" class="w-full bg-discord-blue hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition">인증 완료</button>
+                </form>
+            <% } %>
+        </div>
+    </div>
+    <script src="/fp/fp.umd.min.js"></script>
+    <script>const authData = { stage: "<%= stage %>", error: "<%= error || null %>" };</script>
+    <script src="/js/auth.js"></script>
+</body>
+</html>
