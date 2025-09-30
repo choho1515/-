@@ -7,19 +7,77 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-<body class="flex items-start justify-center min-h-screen pt-10 pb-10">
-    <div class="main-container p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-3xl text-left transform">
-        <header class="mb-6 border-b pb-4">
-            <h1 class="text-3xl font-extrabold nav-link-active"><%= title %></h1>
-            <nav class="mt-2 text-sm">
-                <a href="/" class="<%= title.includes('환영합니다') ? 'nav-link-active' : 'nav-link-normal' %> hover:underline font-medium mr-4">시스템 소개</a>
-                <a href="/QnA" class="<%= title.includes('Q&A') ? 'nav-link-active' : 'nav-link-normal' %> hover:underline">자주 묻는 질문</a>
-                <a href="/invite" class="text-green-600 dark:text-gray-400 hover:underline font-medium ml-4">봇 초대</a>
-                <a href="/dashboard/login" class="text-gray-600 dark:text-gray-400 hover:underline ml-4">관리자 대시보드</a>
-            </nav>
+<body class="min-h-screen flex flex-col transition-colors duration-300">
+
+    <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex-grow">
+        <header class="fixed-nav-header py-4 shadow-md">
+            <div class="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <h1 class="text-xl font-bold discord-blue">Verita BOT</h1>
+                <nav class="text-sm space-x-4">
+                    <a href="/" class="<%= title.includes('환영합니다') ? 'nav-link-active' : 'nav-link-normal' %> hover:underline font-medium">시스템 소개</a>
+                    <a href="/QnA" class="<%= title.includes('Q&A') ? 'nav-link-active' : 'nav-link-normal' %> hover:underline font-medium">자주 묻는 질문</a>
+                    <a href="/tos" class="<%= title.includes('약관') ? 'nav-link-active' : 'nav-link-normal' %> hover:underline font-medium">이용 약관</a>
+                    <a href="/privacy" class="<%= title.includes('개인정보') ? 'nav-link-active' : 'nav-link-normal' %> hover:underline font-medium">개인정보</a>
+                    <a href="/dashboard/login" class="bg-discord-blue hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded transition-colors ml-4 shadow-md">관리자 대시보드</a>
+                </nav>
+            </div>
         </header>
-        <div class="markdown-content"><%- contentHtml %></div>
-        <footer class="mt-8 pt-4 border-t text-sm text-center footer-text">이 페이지는 디스코드 서버 인증 시스템의 일부입니다.</footer>
+
+        <section class="py-16 text-center" style="padding-top: 5rem;">
+            <h2 class="text-5xl sm:text-6xl font-extrabold text-gray-900 dark:text-white mb-4">
+                서버를 안전하게, <span class="discord-blue">AI 인증</span> 시스템
+            </h2>
+            <p class="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+                <strong>다중 계정</strong> 및 <strong>악성 유저</strong>를 사전에 방지하여, 건강하고 공정한 Discord 커뮤니티를 만드세요.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="/invite" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-200 shadow-xl">
+                    🤖 봇 초대하기
+                </a>
+                
+                <% if (title.includes('환영합니다')) { %>
+                <a href="#features" class="bg-discord-blue hover:bg-indigo-600 text-white font-bold py-3 px-8 rounded-lg text-lg transition duration-200 shadow-xl">
+                    시스템 특징 알아보기
+                </a>
+                <% } %>
+            </div>
+        </section>
+
+        <div id="features" class="main-container p-8 sm:p-10 rounded-xl shadow-2xl w-full text-left mb-8">
+            <header class="mb-6 border-b pb-4">
+                <h3 class="text-2xl font-bold discord-blue"><%= title %></h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">시스템 소개와 작동 원리입니다.</p>
+            </header>
+            
+            <% if (title.includes('환영합니다')) { %>
+            <h3 class="text-2xl font-bold discord-blue mb-6">시스템의 3가지 핵심 기능</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div class="p-6 rounded-xl shadow-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-center feature-card">
+                    <span class="text-3xl discord-blue mb-3 block">🚫</span>
+                    <h4 class="text-xl font-bold mb-2 text-gray-900 dark:text-white">다중 계정 방지</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">네이버 이메일 인증과 기기 지문(Fingerprint ID) 추적을 통해 동일인물의 부계정 생성을 원천적으로 차단합니다.</p>
+                </div>
+                <div class="p-6 rounded-xl shadow-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-center feature-card">
+                    <span class="text-3xl discord-blue mb-3 block">🧠</span>
+                    <h4 class="text-xl font-bold mb-2 text-gray-900 dark:text-white">AI 위험 분석</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Gemini AI가 계정 연령, 유사 이메일 패턴 등을 복합 분석하여 관리자가 놓치기 쉬운 잠재적 위험을 경고합니다.</p>
+                </div>
+                <div class="p-6 rounded-xl shadow-lg bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-center feature-card">
+                    <span class="text-3xl discord-blue mb-3 block">📊</span>
+                    <h4 class="text-xl font-bold mb-2 text-gray-900 dark:text-white">통합 대시보드</h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">인증 통계, 사용자 로그, 연관 계정 기록 등을 웹 대시보드에서 실시간으로 확인하고 관리합니다.</p>
+                </div>
+            </div>
+            <% } %>
+
+            <div class="markdown-content"><%- contentHtml %></div>
+        </div>
     </div>
+
+    <footer class="mt-8 py-6 main-container-footer shadow-inner w-full">
+        <div class="max-w-6xl mx-auto text-sm text-center footer-text">
+            이 페이지는 디스코드 서버 인증 시스템의 일부입니다. | &copy; <%= new Date().getFullYear() %> Verita BOT.
+        </div>
+    </footer>
 </body>
 </html>
