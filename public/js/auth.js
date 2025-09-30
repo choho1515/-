@@ -35,20 +35,39 @@ function displayAlert(type, message) {
 
 function setupEmailStage() {
     const fingerprintIdInput = document.getElementById('fingerprint-id');
+    const fingerprintComponentsInput = document.getElementById('fingerprint-components');
     const submitButton = document.getElementById('submit-button');
-    if (!fingerprintIdInput || !submitButton) return;
+    if (!fingerprintIdInput || !submitButton || !fingerprintComponentsInput) return;
 
     FingerprintJS.load()
-        .then(fp => fp.get())
+        .then(fp => fp.get({ extendedResult: true }))
         .then(result => {
             fingerprintIdInput.value = result.visitorId;
+
+            const relevantComponents = {
+                platform: result.components.platform && result.components.platform.value,
+                screenResolution: result.components.screenResolution && result.components.screenResolution.value,
+                timeZone: result.components.timeZone && result.components.timeZone.value,
+                canvas: result.components.canvas && result.components.canvas.value,
+                webglVendor: result.components.webglVendor && result.components.webglVendor.value
+            };
+
+            Object.keys(relevantComponents).forEach(key => {
+                if (relevantComponents[key] === undefined || relevantComponents[key] === null) {
+                    delete relevantComponents[key];
+                }
+            });
+
+            fingerprintComponentsInput.value = JSON.stringify(relevantComponents);
+            
             submitButton.disabled = false;
             submitButton.classList.remove('bg-gray-400', 'cursor-not-allowed');
             submitButton.classList.add('bg-discord-blue', 'hover:bg-indigo-600');
             submitButton.textContent = '인증 코드 요청하기';
         })
         .catch(error => {
-            displayAlert('error', '기기 정보 수집에 실패했습니다. 다른 브라우저로 시도해주세요.');
+            console.error('FingerprintJS 로드 및 정보 수집 실패 (사용자 환경 차단 의심):', error);
+            displayAlert('error', '기기 정보 수집에 실패했습니다. (브라우저 확장 기능 또는 보안 설정 확인)');
             submitButton.textContent = '오류 발생';
         });
 }
