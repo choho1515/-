@@ -1,19 +1,28 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/style.css">
 </head>
+
 <body class="p-4 sm:p-10 min-h-screen">
     <header class="header-bg p-6 rounded-lg shadow-lg text-white mb-8 flex justify-between items-center">
         <div>
-            <h1 class="text-3xl font-extrabold mb-1"><%= guild.name %> - 봇 설정</h1>
+            <h1 class="text-3xl font-extrabold mb-1">
+                <%= guild.name %> - 봇 설정
+            </h1>
             <p class="text-sm opacity-90">이 페이지에서 봇의 작동 방식을 변경할 수 있습니다.</p>
+
         </div>
-        <a href="/dashboard?guildId=<%= guild.id %>" class="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded transition-colors">← 대시보드로 돌아가기</a>
+        <a href="/dashboard?guildId=<%= guild.id %>"
+            class="bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded transition-colors">← 대시보드로
+            돌아가기</a>
     </header>
 
     <% if (success) { %>
@@ -21,39 +30,66 @@
             <p class="font-bold">성공!</p>
             <p>설정이 성공적으로 저장되었습니다.</p>
         </div>
-    <% } %>
+        <% } %>
 
-    <div class="card p-6 sm:p-8 rounded-lg shadow-lg">
-        <form action="/dashboard/settings" method="POST">
-            <input type="hidden" name="guildId" value="<%= guild.id %>">
-            
-            <div class="mb-6">
-                <label for="verifiedRoleId" class="block text-lg font-medium mb-2">인증 역할 설정</label>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">인증 완료 시 부여할 역할을 선택하세요.</p>
-                <select id="verifiedRoleId" name="verifiedRoleId" class="select-input w-full p-2 border rounded-md">
-                    <option value="none" <%= !settings.verifiedRoleId ? 'selected' : '' %>>기본값 ('인증' 역할)</option>
-                    <% roles.forEach(role => { %>
-                        <option value="<%= role.id %>" <%= settings.verifiedRoleId === role.id ? 'selected' : '' %>><%= role.name %></option>
-                    <% }); %>
-                </select>
-            </div>
+            <div class="card 
+p-6 sm:p-8 rounded-lg shadow-lg">
+                <form action="/dashboard/settings" method="POST">
+                    <input type="hidden" name="guildId" value="<%= guild.id %>">
 
-            <div class="mb-6 pt-6 border-t dark:border-gray-700">
-                <label for="logRoleId" class="block text-lg font-medium mb-2">로그 알림 역할 설정</label>
-                <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">로그 스레드에서 멘션할 역할을 선택하세요. `/설정` 명령어로 지정한 역할이 기본값입니다.</p>
-                <select id="logRoleId" name="logRoleId" class="select-input w-full p-2 border rounded-md">
-                    <option value="none" <%= !settings.logRoleId ? 'selected' : '' %>>역할 없음 (멘션 안 함)</option>
-                    <% roles.forEach(role => { %>
-                        <option value="<%= role.id %>" <%= settings.logRoleId === role.id ? 'selected' : '' %>><%= role.name %></option>
-                    <% }); %>
-                </select>
+                    <div class="mb-6">
+                        <label for="verifiedRoleId" class="block text-lg font-medium mb-2">인증 역할 설정</label>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">인증 완료
+                            시 부여할 역할을 선택하세요.</p>
+                        <select id="verifiedRoleId" name="verifiedRoleId"
+                            class="select-input w-full p-2 border rounded-md">
+                            <option value="none" <%=!settings.verifiedRoleId ? 'selected' : '' %>>기본값 ('인증' 역할)</option>
+                            <% roles.forEach(role=> { %>
+                                <option value="<%= role.id %>" <%=settings.verifiedRoleId===role.id ? 'selected' : '' %>
+                                    ><%= role.name %>
+                                </option>
+                                <% }); %>
+                        </select>
+                    </div>
+
+                    <div class="mb-6 pt-6 border-t dark:border-gray-700">
+                        <label for="logThreadChannelId" class="block text-lg font-medium mb-2">로그 스레드 채널 설정</label>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">인증 로그 스레드를 생성할 텍스트 채널을 선택하세요. 기본값은
+                            `/설정` 명령어로 지정한 인증 메시지 채널입니다.</p>
+                        <select id="logThreadChannelId" name="logThreadChannelId"
+                            class="select-input w-full p-2 border rounded-md">
+                            <option value="default" <%=!settings.logThreadChannelId ||
+                                settings.logThreadChannelId==='default' ? 'selected' : '' %>>기본값 (인증 메시지 채널)</option>
+                            <% textChannels.forEach(channel=> { %>
+                                <option value="<%= channel.id %>" <%=settings.logThreadChannelId===channel.id
+                                    ? 'selected' : '' %>><%= channel.name %>
+                                </option>
+                                <% }); %>
+                        </select>
+                    </div>
+                    <div class="mb-6 pt-6 border-t dark:border-gray-700">
+                        <label for="logRoleId" class="block text-lg font-medium mb-2">로그 알림 역할 설정</label>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">로그 스레드에서 멘션할 역할을 선택하세요.
+                            `/설정` 명령어로 지정한 역할이 기본값입니다.</p>
+                        <select id="logRoleId" name="logRoleId" class="select-input w-full p-2 border rounded-md">
+                            <option value="none" <%=!settings.logRoleId ? 'selected' : '' %>>역할 없음 (멘션 안 함)</option>
+                            <% roles.forEach(role=> { %>
+                                <option value="<%= role.id %>" <%=settings.logRoleId===role.id ? 'selected' : '' %>><%=
+                                        role.name %>
+                                </option>
+                                <% }); %>
+                        </select>
+                    </div>
+                    <div class="mt-8 pt-5 border-t dark:border-gray-700">
+                        <div class="flex justify-end">
+                            <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">설정
+                                저장</button>
+
+                        </div>
+                    </div>
+                </form>
             </div>
-            <div class="mt-8 pt-5 border-t dark:border-gray-700">
-                <div class="flex justify-end">
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">설정 저장</button>
-                </div>
-            </div>
-        </form>
-    </div>
-    </body>
+</body>
+
 </html>
