@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>개인정보 동의 | Discord 인증 시스템</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div id="consent-container" class="relative p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-lg text-center">
+        <h1 class="text-3xl font-extrabold mb-2" style="color: #5865F2;">✅ 개인정보 수집 및 이용 동의</h1>
+        <p class="text-gray-500 dark:text-gray-400 mb-6">인증을 진행하기 위해 동의가 필요합니다.</p>
+        <form action="/auth/consent" method="POST" class="space-y-6 text-left">
+            <input type="hidden" name="token" value="<%= token %>">
+            <div class="consent-box border p-4 rounded-lg shadow-inner">
+                <h2 class="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">개인정보 수집 및 이용 약관</h2>
+                <ul class="list-disc ml-5 space-y-2 text-sm">
+                    <li><strong>수집 및 이용 목적</strong>: 다중 계정 생성 및 악성 사용자 방지</li>
+                    <li><strong>수집 항목</strong>:
+                        <ul class="list-circle ml-5 mt-1">
+                            <li><strong>디스코드 계정 ID 및 사용자 이름</strong></li>
+                            <li><strong>네이버 이메일 주소</strong> (암호화되어 저장됨)</li>
+                            <li><strong>사용자 기기의 고유 식별 정보 (Fingerprint ID)</strong></li>
+                            <li><strong>디스코드 계정 생성일 (가입일)</strong></li>
+                        </ul>
+                    </li>
+                    <li><strong>보유 및 이용 기간</strong>: 서버 탈퇴 및 계정 삭제 요청 시까지</li>
+                </ul>
+            </div>
+            <div class="flex items-start">
+                <div class="flex items-center h-5">
+                    <input id="agree" name="agree" type="checkbox" required class="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600">
+                </div>
+                <div class="ml-3 text-sm">
+                    <label for="agree" class="font-medium text-gray-900 dark:text-gray-300">본인은 개인정보 수집 및 이용 목적에 동의하며, 허위 정보가 아님을 확인합니다.</label>
+                    <p class="consent-text text-sm mt-1">동의하지 않으면 인증을 진행할 수 없습니다.</p>
+                </div>
+            </div>
+            <button type="submit" id="submit-button" disabled class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed dark:disabled:bg-gray-600">동의하고 Discord 인증 계속</button>
+        </form>
+    </div>
+    <script src="/js/consent.js"></script>
+</body>
+</html>
