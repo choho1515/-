@@ -28,7 +28,9 @@ body {
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-.main-container {
+.main-container,
+.main-container-header,
+.main-container-footer {
     background-color: var(--color-card);
     color: var(--color-text);
 }
@@ -45,6 +47,84 @@ body {
     .main-container {
         box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
     }
+}
+
+.fixed-nav-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background-color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(24px); 
+    -webkit-backdrop-filter: blur(24px);
+    box-shadow: 0 1px 10px rgba(0, 0, 0, 0.1); 
+}
+
+@media (prefers-color-scheme: dark) {
+    .fixed-nav-header {
+        background-color: rgba(43, 45, 49, 0.85);
+        box-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
+    }
+}
+
+.main-container {
+    position: relative; 
+    overflow: hidden; 
+    isolation: isolate;
+    transition: box-shadow 0.3s ease;
+}
+
+.main-container::before {
+    content: '';
+    position: absolute;
+    inset: -3px; 
+    border-radius: 1rem;
+    background: transparent;
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.3s ease, background-image 0.05s linear;
+}
+
+.main-container.mouse-hover-glow::before {
+    opacity: 1;
+    background: radial-gradient(
+        400px circle at var(--mouse-x) var(--mouse-y),
+        rgba(88, 101, 242, 0.5),
+        transparent 60%
+    );
+}
+
+@media (prefers-color-scheme: dark) {
+    .main-container.mouse-hover-glow::before {
+        background: radial-gradient(
+            400px circle at var(--mouse-x) var(--mouse-y),
+            rgba(153, 170, 255, 0.4),
+            transparent 60%
+        );
+    }
+}
+
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    color: var(--color-text);
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid var(--color-box-border);
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.markdown-content th {
+    background-color: var(--color-box-bg);
+    font-weight: 700;
+    color: #5865F2;
 }
 
 .markdown-content h1 {
@@ -72,9 +152,9 @@ body {
 }
 
 .markdown-content p {
-    color: #4B5563;
-    margin-bottom: 1rem;
+    color: var(--color-text); 
     line-height: 1.6;
+    margin-bottom: 1.25rem;
 }
 
 .markdown-content code {
@@ -87,13 +167,27 @@ body {
 .markdown-content blockquote {
     border-left: 4px solid #5865F2;
     background-color: #EEF2FF;
-    color: #1F2937;
+    color: var(--color-text); 
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;-
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.markdown-content .fingerprint-danger-box {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border: 1px solid #ED4245;
+    background-color: #FEE2E2;
+    color: #991B1B;
 }
 
 .markdown-content ul,
 .markdown-content ol {
+    margin-top: 1rem;
     margin-left: 1.5rem;
-    margin-bottom: 1rem;
     list-style-type: disc;
 }
 
@@ -127,6 +221,10 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
+    .markdown-content th {
+        color: #99aaff;
+    }
+
     .markdown-content h1 {
         color: #99aaff;
     }
@@ -148,6 +246,13 @@ body {
         border-left: 4px solid #99aaff;
         background-color: #36393f;
         color: #d4d4d4;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .markdown-content .fingerprint-danger-box {
+        background-color: #450A0A;
+        color: #FCA5A5;
     }
 
     .footer-text {
@@ -160,17 +265,14 @@ body {
 
     .nav-link-active {
         color: #99aaff;
+        border-bottom: 2px solid #99aaff;
     }
+}
 
-    .markdown-content .blockquote-danger {
-        border-left: 4px solid #ED4245 !important;
-        background-color: #450A0A !important;
-        color: #FCA5A5 !important;
-    }
-
-    .markdown-content .fingerprint-link {
-        color: #FCA5A5 !important;
-    }
+.nav-link-active {
+    color: #5865F2;
+    border-bottom: 2px solid #5865F2;
+    padding-bottom: 2px;
 }
 
 .html-list li {
