@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-10">
+    <div class="card p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-lg text-center">
+        <h1 class="text-3xl font-extrabold mb-4 text-discord-blue dark:text-gray-200">서버를 선택하세요 🌐</h1>
+        <p class="text-gray-600 dark:text-gray-400 mb-6">봇이 참여 중이며, 당신이 관리하거나 소유권을 가진 서버를 클릭하여 대시보드를 엽니다.</p>
+        <div class="space-y-3">
+            <% if (availableGuilds && availableGuilds.length > 0) { %>
+                <% availableGuilds.forEach(guild => { %>
+                    <a href="/dashboard?guildId=<%= guild.id %>" class="server-item flex items-center p-4 rounded-lg shadow-md cursor-pointer transition duration-150 ease-in-out hover:shadow-lg">
+                        <img src="<%= guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png' %>" alt="Guild Icon" class="w-10 h-10 rounded-full mr-4">
+                        <span class="font-semibold text-lg flex-grow text-left"><%= guild.name %></span>
+                        <% if (guild.owner) { %>
+                            <span class="text-xs font-bold text-green-600 dark:text-green-400">OWNER</span>
+                        <% } else { %>
+                            <span class="text-xs font-bold text-yellow-600 dark:text-yellow-400">ADMIN</span>
+                        <% } %>
+                    </a>
+                <% }); %>
+            <% } else { %>
+                <p class="text-red-500 dark:text-red-400">접근 가능한 서버가 없습니다. 봇을 서버에 초대했는지 확인하세요.</p>
+            <% } %>
+        </div>
+        <footer class="mt-8 pt-4 border-t text-sm text-gray-500 dark:text-gray-400">
+            <a href="/dashboard/login" class="hover:underline">다시 로그인</a>
+        </footer>
+    </div>
+</body>
+</html>
