@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>인증 UI 테스트 페이지</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        'discord-blue': '#5865F2',
+                        'success': '#57F287',
+                        'error': '#ED4245',
+                        'dark-bg': '#1e1f22',
+                        'dark-card': '#2b2d31',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --color-bg: #f7fafc; --color-card: #ffffff; --color-text: #1f2937; --color-text-sub: #6b7280;
+            --color-success-bg: #F0FFF4; --color-success-text: #22543D;
+            --color-error-bg: #FEE2E2; --color-error-text: #991B1B;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-bg: #1e1f22; --color-card: #2b2d31; --color-text: #e5e7eb; --color-text-sub: #9ca3af;
+                --color-success-bg: #065F46; --color-success-text: #A7F3D0;
+                --color-error-bg: #450A0A; --color-error-text: #FCA5A5;
+            }
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--color-bg); color: var(--color-text); }
+        #auth-container { background-color: var(--color-card); }
+        .success-box { background-color: var(--color-success-bg); border-color: #10B981; color: var(--color-success-text); }
+        .error-box { background-color: var(--color-error-bg); border-color: #ED4245; color: var(--color-error-text); }
+        .test-controls { position: fixed; top: 1rem; left: 1rem; background-color: var(--color-card); padding: 0.75rem; border-radius: 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 100; border: 1px solid var(--color-input-border, #e5e7eb); }
+        .test-controls button { padding: 0.5rem 1rem; border-radius: 0.375rem; font-weight: 600; transition: background-color 0.2s; }
+        .test-controls button:hover { background-color: rgba(88, 101, 242, 0.2); }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="test-controls flex flex-wrap gap-2">
+        <button onclick="showStage('email_fingerprint')">📧 이메일 입력</button>
+        <button onclick="showStage('code_submit')">🔢 코드 입력</button>
+        <button onclick="showStage('loading')">⏳ 로딩</button>
+        <button onclick="showStage('success')">✅ 성공</button>
+        <button onclick="showStage('error')">❌ 실패</button>
+    </div>
+
+    <div id="auth-container" class="relative p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-sm sm:max-w-md text-center">
+
+        <div id="loading-overlay" class="hidden absolute inset-0 bg-white dark:bg-dark-card bg-opacity-95 flex items-center justify-center rounded-xl z-10 transition-opacity duration-300 px-8">
+            <div class="w-full max-w-xs text-center">
+                <h2 class="text-xl font-bold">AI 분석 중...</h2>
+                <p class="mt-2 mb-4">잠시만 기다려주세요.</p>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                    <div id="loading-bar" class="bg-discord-blue h-2.5 rounded-full" style="width: 100%; transition-duration: 4000ms;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="main-content">
+            <h1 class="text-3xl font-extrabold mb-2 text-discord-blue">🔒 인증 센터</h1>
+            <p class="text-gray-500 dark:text-gray-400 mb-6">다중 계정 방지 시스템</p>
+
+            <div id="stage-error" class="stage-content hidden">
+                <div class="error-box border p-6 rounded-xl shadow-lg">
+                    <div class="space-y-4">
+                        <h2 class="text-2xl font-bold">인증 실패</h2>
+                        <p class="font-medium break-words">테스트 에러 메시지입니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage-success" class="stage-content hidden">
+                <div class="success-box border p-6 rounded-xl shadow-lg">
+                    <div class="space-y-4">
+                        <h2 class="text-2xl font-bold">인증 완료!</h2>
+                        <p class="font-medium">테스트 성공 메시지입니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="stage-email_fingerprint" class="stage-content hidden">
+                <h2 class="text-xl font-bold">이메일 인증 및 기기 확인</h2>
+                <form class="space-y-4 mt-4" onsubmit="event.preventDefault(); showStage('code_submit');">
+                    <div class="text-left">
+                        <label for="email" class="block text-sm font-medium mb-1">네이버 이메일 주소 (@naver.com)</label>
+                        <input type="email" id="email" name="email" required placeholder="example@naver.com" class="w-full p-3 border rounded-lg bg-white dark:bg-dark-card dark:border-gray-600">
+                    </div>
+                    <button type="submit" id="submit-button" class="w-full bg-discord-blue hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg">인증 코드 요청하기</button>
+                </form>
+            </div>
+
+            <div id="stage-code_submit" class="stage-content hidden">
+                <h2 class="text-xl font-bold">인증 코드 입력</h2>
+                <p class="text-gray-500 dark:text-gray-400 mb-4">example@naver.com으로 전송된 코드를 입력하세요.</p>
+                <form class="space-y-4" onsubmit="event.preventDefault(); showStage('loading');">
+                    <div class="text-left">
+                        <label for="code" class="block text-sm font-medium mb-1">인증 코드 (6자리)</label>
+                        <input type="text" id="code" name="code" required maxlength="6" pattern="\d{6}" placeholder="123456" class="w-full p-3 text-center border rounded-lg bg-white dark:bg-dark-card dark:border-gray-600">
+                    </div>
+                    <button type="submit" class="w-full bg-discord-blue hover:bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg">인증 완료</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const allStages = document.querySelectorAll('.stage-content');
+
+        function showStage(stageName) {
+            if (stageName === 'loading') {
+                loadingOverlay.classList.remove('hidden');
+            } else {
+                loadingOverlay.classList.add('hidden');
+            }
+            allStages.forEach(stage => {
+                stage.classList.add('hidden');
+            });
+            const activeStage = document.getElementById(`stage-${stageName}`);
+            if (activeStage) {
+                activeStage.classList.remove('hidden');
+            }
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            showStage('email_fingerprint');
+        });
+    </script>
+</body>
+</html>
