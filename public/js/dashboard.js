@@ -53,11 +53,25 @@ function searchUsers() {
 const modal = document.getElementById('userDetailsModal');
 const modalLoader = document.getElementById('modal-loader');
 const modalData = document.getElementById('modal-data');
+
+const miniModal = document.getElementById('miniUserDetailsModal');
+const miniModalLoader = document.getElementById('mini-modal-loader');
+const miniModalData = document.getElementById('mini-modal-data');
+
 if (modal) {
     modal.addEventListener('click', closeModal);
 }
+if (miniModal) {
+    miniModal.addEventListener('click', closeMiniModal);
+}
 
-function closeModal() { if (modal) modal.style.display = 'none'; }
+function closeModal() {
+    if (modal) modal.style.display = 'none';
+}
+
+function closeMiniModal() {
+    if (miniModal) miniModal.style.display = 'none';
+}
 
 function translateLogReason(log) {
     const reasonText = log.reason || '';
@@ -80,9 +94,51 @@ function translateLogReason(log) {
     }
 }
 
+async function showMiniUserDetails(userId, guildId) {
+    if (!miniModal) return;
+    miniModal.style.display = 'flex';
+    miniModalLoader.style.display = 'block';
+    miniModalData.style.display = 'none';
+    miniModalLoader.textContent = '불러오는 중...';
+
+    try {
+        const response = await fetch(`/dashboard/api/user/${userId}?guildId=${guildId}`);
+        if (!response.ok) throw new Error('데이터를 불러오는데 실패했습니다.');
+        const data = await response.json();
+
+        document.getElementById('mini-modal-username').textContent = data.discordInfo.username;
+        document.getElementById('mini-modal-userid').textContent = data.discordInfo.id;
+        document.getElementById('mini-modal-email').textContent = data.verificationData.email || 'N/A';
+        document.getElementById('mini-modal-fingerprint').textContent = data.verificationData.fingerprint || 'N/A';
+
+        const relatedDiv = document.getElementById('mini-modal-related-accounts');
+        relatedDiv.innerHTML = '';
+
+        if (data.relatedAccounts.byFingerprint.length > 0) {
+            relatedDiv.innerHTML = `<h4 class="font-bold text-sm mt-2">동일 기기 사용자:</h4>` +
+                data.relatedAccounts.byFingerprint.map(id => `<div>- <code>${id}</code></div>`).join('');
+        } else {
+            relatedDiv.innerHTML = `<div class="text-gray-400">동일 기기 사용자 없음.</div>`;
+        }
+
+        document.getElementById('mini-modal-logs-count').textContent = data.authLogs.length;
+
+        document.getElementById('mini-modal-full-details-button').onclick = () => {
+            closeMiniModal();
+            showUserDetails(userId, guildId);
+        };
+
+        miniModalLoader.style.display = 'none';
+        miniModalData.style.display = 'block';
+    } catch (error) {
+        miniModalLoader.textContent = `데이터 로드 실패: ${error.message}`;
+    }
+}
+
 async function showUserDetails(userId, guildId) {
     if (!modal) return;
     modal.style.display = 'flex';
+    if (miniModal) miniModal.style.display = 'none';
     modalLoader.style.display = 'block';
     modalData.style.display = 'none';
     modalLoader.textContent = '불러오는 중...';
@@ -107,13 +163,15 @@ async function showUserDetails(userId, guildId) {
 
         if (data.verificationData.similarEmailInfo?.isSimilar) {
             const info = data.verificationData.similarEmailInfo;
-            warningHTML = `🚨 <b>유사 이메일 감지:</b> 이 계정은 <code>${info.matchedEmail}</code> (ID: <code>${info.matchedUserId}</code>)와(과) 유사합니다.`;
+            if (info.matchedUserId !== userId) {
+                warningHTML = `🚨 <b>유사 이메일 감지:</b> <button onclick="event.stopPropagation(); showMiniUserDetails('${info.matchedUserId}', '${guildId}')" class="text-blue-500 hover:underline font-semibold"><code>${info.matchedEmail}</code> (ID: <code>${info.matchedUserId}</code>)</button>와(과) 유사합니다.`;
+            }
         } 
         else if (data.relatedAccounts.bySimilarEmail.length > 0) {
             const similarUsersList = data.relatedAccounts.bySimilarEmail
-                .map(rel => `<code>${rel.email}</code> (ID: <code>${rel.userId}</code>)`)
+                .map(rel => `<button onclick="event.stopPropagation(); showMiniUserDetails('${rel.userId}', '${guildId}')" class="text-blue-500 hover:underline font-semibold"><code>${rel.email}</code> (ID: <code>${rel.userId}</code>)</button>`)
                 .join(', ');
-            warningHTML = `🚨 <b>유사 이메일 감지:</b> 이 계정은 <code>${similarUsersList}</code>와(과) 유사합니다.`;
+            warningHTML = `🚨 <b>유사 이메일 감지:</b> 이 계정은 ${similarUsersList}와(과) 유사합니다.`;
         }
 
         if (warningHTML) {
@@ -131,21 +189,24 @@ async function showUserDetails(userId, guildId) {
         if (data.relatedAccounts.byFingerprint.length > 0) {
             hasRelatedAccounts = true;
             relatedDiv.innerHTML = `<h4 class="font-bold text-sm mt-2">동일 기기 사용자:</h4>` +
-                data.relatedAccounts.byFingerprint.map(id => `<div>- <code>${id}</code></div>`).join('');
+                data.relatedAccounts.byFingerprint.map(id => `<div>- <button onclick="event.stopPropagation(); showMiniUserDetails('${id}', '${guildId}')" class="text-blue-500 hover:underline"><code>${id}</code></button></div>`).join('');
         }
         
         relatedSection.style.display = hasRelatedAccounts ? 'block' : 'none';
 
         const logsDiv = document.getElementById('modal-logs');
         if (data.authLogs.length > 0) {
-            logsDiv.innerHTML = data.authLogs.map(log => {
-                const date = new Date(log.timestamp).toLocaleString('ko-KR');
-                const translation = translateLogReason(log);
-                return `<div class="p-2 rounded-md mb-1 ${log.result === 'allowed' ? 'bg-green-500/10' : log.result === 'denied' ? 'bg-red-500/10' : 'bg-yellow-500/10'}">
-                    <p class="text-sm">${translation}</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono">${date}</p>
-                </div>`;
-            }).join('');
+            logsDiv.innerHTML = data.authLogs
+                .slice()
+                .sort((a, b) => b.timestamp - a.timestamp)
+                .map(log => {
+                    const date = new Date(log.timestamp).toLocaleString('ko-KR');
+                    const translation = translateLogReason(log);
+                    return `<div class="p-2 rounded-md mb-1 ${log.result === 'allowed' ? 'bg-green-500/10' : log.result === 'denied' ? 'bg-red-500/10' : 'bg-yellow-500/10'}">
+                        <p class="text-sm">${translation}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-mono">${date}</p>
+                    </div>`;
+                }).join('');
         } else {
             logsDiv.innerHTML = '<div class="text-gray-400">기록된 인증 로그가 없습니다.</div>';
         }
@@ -156,7 +217,6 @@ async function showUserDetails(userId, guildId) {
         modalLoader.textContent = error.message;
     }
 }
-
 function deleteUser(userId, guildId) {
     if (!confirm(`경고: 사용자 ID ${userId}의 모든 인증 기록을 영구 파기합니다. 계속하시겠습니까?`)) {
         return;
